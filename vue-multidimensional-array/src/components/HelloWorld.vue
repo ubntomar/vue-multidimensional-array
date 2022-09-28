@@ -36,10 +36,16 @@
     </div>
     <div class="col" >
       <div class="row" v-for="(ipBox,index) in ipBoxes" :key="index">
-       <span>L-{{ index }}=></span>
-       <span v-for="(box,boxindex) in ipBox" :key="boxindex" >
-        | {{ box.ip }} | 
-       </span>
+       <!-- <span>L-{{ index }}=></span> -->
+       <div class="box" v-for="(box,boxindex) in ipBox" :key="boxindex" >
+          <div class="box--img">
+            <img class="box--img__left" src="../assets/iconmonstr-angel-down-circle-thin.svg" alt="">
+          </div> 
+          <span>{{ box.ip }}</span>  
+          <div class="box--img">
+            <img class="box--img__right" src="../assets/iconmonstr-angel-right-circle-thin.svg" alt="">
+          </div> 
+       </div>
       </div>
     </div>
 
@@ -48,9 +54,11 @@
 </template>
 
 
-<style scoped>
+<style scoped lang="scss"> 
   .container{
-    background-color: brown;
+    font-size: .7rem;
+    font-weight: 700;
+    background-color: rgb(11, 36, 39);
     width: 400px;
     height: 400px; 
     padding: 20px;
@@ -67,16 +75,33 @@
     
   }
   .col{
-    background-color: rgb(128, 42, 42);
+    background-color: rgb(29, 36, 99);
     height: 300px;
     padding: .5rem;
   }
   .row{
-    padding: .5rem;
+    padding: 0;
     margin: .5rem;
-    color: aliceblue;
-    background-color: rgb(59, 17, 17);
-    max-width: 130px;
-    border-radius: 5px;
+    color: rgb(9, 31, 53);
+    
+  }
+  .box{
+    padding: 3px;
+    border-radius: 10px;
+    margin: .5rem;
+    background-color:white;
+    max-width: 9rem; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    &--img{
+      background-color:white;
+      &__left{
+        transform: translateY(+20%);
+      } 
+      &__right{
+        transform: translateY(+20%);
+      } 
+    }
   }
 </style>
