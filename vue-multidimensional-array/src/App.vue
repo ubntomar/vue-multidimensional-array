@@ -3,7 +3,7 @@ import HelloWorld from './components/HelloWorld.vue'
 </script>
 
 <template>
-  <HelloWorld msg="Multidimensional Arrays" />
+  <HelloWorld msg="IP monitor" />
   <div>
     
   </div>
