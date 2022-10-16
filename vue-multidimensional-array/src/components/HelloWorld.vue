@@ -177,32 +177,72 @@ const hideBoxes = (box: any) => {
     });
   });
 };
-const moveSelectedToLeft =(clickedBox: any) => {
-  clickedBox.lineToRightLong-=11
-  clickedBox.childs.forEach((arrayInsideChildId: any) => {
-    boxes.value.find((box: any) => {
-      if (box.id === arrayInsideChildId.id) {
-        if (arrayInsideChildId.direction === "toRight") {
-          box.colPosition-=1
-          moveTargetedChildsToLeft(box);
-          console.log('end');
-          return;
+const moveSelectedToLeft = (clickedBox: any) => {
+  if (isValidtomove(clickedBox)) {
+    clickedBox.lineToRightLong-=11
+    clickedBox.childs.forEach((arrayInsideChildId: any) => {
+      boxes.value.find((box: any) => {
+        if (box.id === arrayInsideChildId.id) {
+          if (arrayInsideChildId.direction === "toRight") {
+            box.colPosition-=1
+            moveTargetedChildsToLeft(box);
+            console.log('end');
+            return;
+          }
         }
-      }
+      });
     });
-  });
+  }else{
+    console.log('No es valido para mi¡over');
+    
+  }
 };
+let isValidtomove = (box: any): boolean => {
+  let boxColPositionTarget: any = 0;
+  const child: any = box.childs.find((child: any) => child.direction === "toRight");
+  if (child.id)
+    boxColPositionTarget = boxes.value.find((box: any) => box.id === child.id);
+  if (boxColPositionTarget.colPosition) {
+    if (isAlreadyBussy(box, boxColPositionTarget.colPosition - 1)) {
+      console.log('position bussy - (true)isAlreadyBussy return false');
+      return false
+    }
+  }
+  console.log('Autorizado para moverse ok');
+  return true;
+};
+const isAlreadyBussy = (boxTargeted: any, colPositionTarget: number): boolean => {
+  let rowTarget: number;
+  let result:boolean=false
+  boxTargeted.childs.forEach((child: any) => {
+    if (boxes.value.some((box: any) => {
+      if (child.id === box.id) {
+        rowTarget = box.rowPosition;
+        return boxes.value.some(
+          (element: any) =>{
+            console.log(`*id:${element.id} ${element.rowPosition} === (${rowTarget}) && ${element.colPosition} === (${colPositionTarget})`);
+            return element.rowPosition === rowTarget && element.colPosition === colPositionTarget && element.isToShow === true
+          }
+            
+        );
+      }
+    })){
+      console.log('true');
+      result= true
+    } 
+  });
+  return result
+};
+
 const moveTargetedChildsToLeft = (ParentBoxesToLeft: any) => {
   ParentBoxesToLeft.childs.forEach((arrayInsideChildId: any) => {
     boxes.value.find((Box: any) => {
       if (Box.id === arrayInsideChildId.id) {
-          Box.colPosition-=1
-          moveTargetedChildsToLeft(Box)
-        }
+        Box.colPosition -= 1;
+        moveTargetedChildsToLeft(Box);
+      }
     });
   });
-  console.log('inside fn');
-  
 };
 const allocatePosition = computed(() => {
   return (box: any) => {
@@ -231,7 +271,7 @@ const showArrowtoDown = computed(() => {
 });
 
 onMounted(() => {
-  boxes.value.shift();
+  // boxes.value.shift();
 });
 </script>
 
@@ -396,7 +436,7 @@ main {
   width: 11px;
   background: rgba(34, 187, 40, 0.54);
   z-index: 99;
-  &:hover{
+  &:hover {
     background: rgba(229, 249, 80, 0.54);
   }
 }
