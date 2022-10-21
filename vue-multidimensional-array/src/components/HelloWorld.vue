@@ -8,6 +8,9 @@ const containerHeadValues = ref({ buttonMsj: "Start", ipAddress: "" });
 const boxesId: Ref<any> = ref([]);
 boxesId.value.push(1);
 let isAlreadyBussyResult = ref(false);
+const directionToBottom=ref<string>('toBottom')
+const directionToRight=ref<string>('toRight')
+
 const createFirstRow = () => {
   if (
     containerHeadValues.value.buttonMsj === "Start" &&
@@ -36,7 +39,6 @@ const createFirstRow = () => {
     containerHeadValues.value.buttonMsj = "Start";
   }
 };
-
 const addChild = (fatherBox: any, direction: string) => {
   let fatherId: number = fatherBox.id;
   let newChildIdFetched: number = boxesId.value.at(-1) + 1;
@@ -44,15 +46,15 @@ const addChild = (fatherBox: any, direction: string) => {
   let newChildRowPosition: number;
   let newChildColPosition: number;
   const newChildId: number = newChildIdFetched;
-  if (direction === "toBottom") {
-    fatherBox.childs.push({ id: newChildIdFetched, direction: "toBottom" });
+  if (direction === directionToBottom.value) {
+    fatherBox.childs.push({ id: newChildIdFetched, direction: directionToBottom.value });
     fatherBox.isAllowedGrowingToDown = false;
     fatherBox.isthereChildToDown = true;
     newChildRowPosition = fatherBox.rowPosition + 1;
     newChildColPosition = fatherBox.colPosition;
     recalculateBoxesLocationToDown(newChildId, newChildRowPosition);
   } else {
-    fatherBox.childs.push({ id: newChildIdFetched, direction: "toRight" });
+    fatherBox.childs.push({ id: newChildIdFetched, direction: directionToRight.value });
     fatherBox.isAllowedGrowingToDown = true;
     fatherBox.isAllowedGrowingToRight = false;
     fatherBox.isthereChildToRight = true;
@@ -109,7 +111,6 @@ const recalculateBoxesLocationToDown = (
     }
   });
 };
-
 let findFatherColPosition = (idChild: number): any => {
   let colPosition = {
     found: false,
@@ -184,8 +185,8 @@ const findFatherChildToDownAndExtendLine = (idChild: number) => {
       if (box.childs.find((child: any) => child.id === idChild)) {
         if (box.isthereChildToDown)
           box.lineToDownLong === 0
-            ? (box.lineToDownLong += 8)
-            : (box.lineToDownLong += 7);
+            ? (box.lineToDownLong += 7)
+            : (box.lineToDownLong += 6);
       }
     }
   );
@@ -204,12 +205,12 @@ const findFatherChildAndDeleteLine = (idChild: number) => {
       let deleteChildRef: boolean = false;
       box.childs.forEach((childRef: any) => {
         if (childRef.id === idChild) {
-          if (childRef.direction === "toRight") {
+          if (childRef.direction === directionToRight.value) {
             box.lineToRightLong = 0;
             box.isthereChildToRight = false;
             box.isAllowedGrowingToRight = true;
           }
-          if (childRef.direction === "toBottom") {
+          if (childRef.direction === directionToBottom.value) {
             box.isthereChildToDown = false;
             box.isAllowedGrowingToDown = true;
           }
@@ -221,7 +222,6 @@ const findFatherChildAndDeleteLine = (idChild: number) => {
     }
   );
 };
-
 const hideBoxes = (box: any) => {
   findFatherChildAndDeleteLine(box.id);
   box.isToShow = false;
@@ -238,15 +238,14 @@ const hideBoxes = (box: any) => {
   });
 };
 const moveSelectedToLeft = (clickedBox: any) => {
-  if (isValidtomove(clickedBox)) {
+  if (isValidToMoveToLeft(clickedBox)) {
     clickedBox.lineToRightLong -= 11;
     clickedBox.childs.forEach((arrayInsideChildId: any) => {
       boxes.value.find((box: any) => {
         if (box.id === arrayInsideChildId.id) {
-          if (arrayInsideChildId.direction === "toRight") {
+          if (arrayInsideChildId.direction === directionToRight.value) {
             box.colPosition -= 1;
             moveTargetedChildsToLeft(box);
-            console.log("end");
             return;
           }
         }
@@ -256,23 +255,60 @@ const moveSelectedToLeft = (clickedBox: any) => {
     console.log("No es valido para mi¡over");
   }
 };
-let isValidtomove = (box: any): boolean => {
+const moveSelectedToUp=(clickedBox:any)=>{
+  const response=isValidToMoveToUp(clickedBox)
+  if(response.status){
+    console.log(`Star to moving rows to UP! over target ${response.target}`);
+    boxes.value.forEach((box:any) => {
+      if(box.rowPosition>response.target && box.isToShow){
+        box.rowPosition-=1
+      }
+    });
+    reduceLongToDown(clickedBox.id)
+  }else{  
+    console.log('else');
+  }
+  
+}
+let isValidToMoveToLeft = (box: any): boolean => {
   let boxColPositionTarget: any = 0;
   isAlreadyBussyResult.value = false;
-  const child: any = box.childs.find((child: any) => child.direction === "toRight");
+  const child: any = box.childs.find((child: any) => child.direction === directionToRight.value);
   if (child.id)
     boxColPositionTarget = boxes.value.find((box: any) => box.id === child.id);
   if (boxColPositionTarget.colPosition) {
     if (isAlreadyBussy(box, boxColPositionTarget.colPosition - 1)) {
-      console.log("position bussy - (true)isAlreadyBussy return false");
       return false;
     }
   }
-  console.log("Autorizado para moverse ok");
   return true;
 };
+let isValidToMoveToUp=(boxTargeted:any):any=>{
+  const targetRowForBoxClickedFrom:number=boxTargeted.rowPosition+1
+  const ChildtoDownId=(boxTargeted.childs.find((child:{direction:string})=>child.direction===directionToBottom.value)).id
+  const targetRowForBoxClickedTo=((boxes.value.find((box:any)=>box.id===ChildtoDownId)).rowPosition)-1
+  for (let row = targetRowForBoxClickedFrom; row <= targetRowForBoxClickedTo; row++) {
+    if(boxes.value.some((box:any) =>row===box.rowPosition && box.isToShow)){
+      console.log(`row ${row} has some box inside! `);
+    }else{
+      console.log(`row ${row} is clear! `);
+      return {target:targetRowForBoxClickedTo,status:true}
+    }
+  }
+  return {target:targetRowForBoxClickedTo,status:false}
+}
+const reduceLongToDown=(targetedBoxId:number)=>{
+  boxes.value.some((box:any)=>{
+    if(box.isToShow && box.id===targetedBoxId){
+      box.lineToDownLong!==0?box.lineToDownLong-=6:0
+      return true
+    }else{
+      return false
+    }
+  })
+  
+}
 const isAlreadyBussy = (boxTargeted: any, colPositionTarget: number): boolean => {
-  console.log("inicia fn y result vale" + isAlreadyBussyResult.value);
   let rowTarget: number;
   boxTargeted.childs.some((child: any) => {
     boxes.value.some((box: any) => {
@@ -280,9 +316,6 @@ const isAlreadyBussy = (boxTargeted: any, colPositionTarget: number): boolean =>
         rowTarget = box.rowPosition;
         if (
           boxes.value.some((element: any) => {
-            console.log(
-              `*id:${child.id} ${element.rowPosition} === (${rowTarget}) && ${element.colPosition} === (${colPositionTarget})`
-            );
             return (
               element.rowPosition === rowTarget &&
               element.colPosition === colPositionTarget &&
@@ -290,13 +323,9 @@ const isAlreadyBussy = (boxTargeted: any, colPositionTarget: number): boolean =>
             );
           })
         ) {
-          console.log(
-            "Encontre coiincidencia!, no debe moverse, isAlreadyBussyResult pasa a true ..llammar fn con true"
-          );
           isAlreadyBussyResult.value = true;
         } else {
           isAlreadyBussyResult.value ? true : false;
-          console.log(`${box.id}  sigo evaluando!`);
           isAlreadyBussy(box, colPositionTarget);
         }
         return isAlreadyBussyResult.value;
@@ -304,10 +333,8 @@ const isAlreadyBussy = (boxTargeted: any, colPositionTarget: number): boolean =>
     });
     return isAlreadyBussyResult.value;
   });
-  console.log("finamente isAlreadyBussyResult vale:" + isAlreadyBussyResult.value);
   return isAlreadyBussyResult.value;
 };
-
 const moveTargetedChildsToLeft = (ParentBoxesToLeft: any) => {
   ParentBoxesToLeft.childs.forEach((arrayInsideChildId: any) => {
     boxes.value.find((Box: any) => {
@@ -345,12 +372,11 @@ const showArrowtoDown = computed(() => {
     `${
       box.isthereChildToDown
         ? `display:block; 
-          height: ${box.lineToDownLong == 0 ? "1.2" : box.lineToDownLong}rem;        
+          height: ${box.lineToDownLong == 0 ? "1" : box.lineToDownLong}rem;        
           `
         : "display:none;"
     }`;
 });
-
 onMounted(() => {
   // boxes.value.shift();
 });
@@ -372,8 +398,9 @@ onMounted(() => {
         <img class="ellipse-up" src="../assets/Ellipse-up.svg" alt="" />
         <img
           :style="showArrowtoDown(box)"
+          @dblclick="moveSelectedToUp(box)"
           class="ellipse-down"
-          src="../assets/Ellipse-right.svg"
+          src="../assets/Ellipse-down.svg"
           alt=""
         />
         <div class="box-menu">
@@ -390,7 +417,7 @@ onMounted(() => {
           />
           <img
             v-if="box.isAllowedGrowingToDown"
-            @click="addChild(box, 'toBottom')"
+            @click="addChild(box, directionToBottom)"
             class="box-body--arrow"
             src="../assets/Vector-Down.svg"
             alt=""
@@ -405,7 +432,7 @@ onMounted(() => {
           </div>
           <img
             v-if="box.isAllowedGrowingToRight"
-            @click="addChild(box, 'toRight')"
+            @click="addChild(box, directionToRight)"
             class="box-body--arrow"
             src="../assets/Vector-Right.svg"
             alt=""
@@ -443,7 +470,7 @@ main {
   grid-template-columns: repeat(100, 1fr);
   grid-template-rows: repeat(100, 1fr);
   grid-column-gap: 1rem;
-  grid-row-gap: 18px;
+  grid-row-gap: 1rem;
 }
 .box {
   max-width: 10rem;
@@ -505,8 +532,12 @@ main {
   position: absolute;
   top: 100%;
   right: 50%;
-  width: 3px;
-  background-color: rgb(255, 255, 255);
+  width: 10px;
+  background-color: rgb(175 124 124 / 68%);
+  z-index: 99;
+  &:hover {
+    background: rgba(160, 167, 116, 0.54);
+  }
 }
 .ellipse-right {
   position: absolute;
